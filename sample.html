@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <script type="text/javascript" src="js/custom.js" ></script>
+    <link href="css/main.css" rel="stylesheet" type="text/css" media="screen" />
+  </head>
+  <body>
+    <div id="area_pintado">
+    </div>
+
+    <script type="text/javascript">
+function loadForm(canvas) {
+      var components = loadJson("components/components.json").components;
+      var curConf = [{
+        id: "SampleInputField",
+        type: "inputText"
+      },
+      {
+        id: "SecondInputField",
+        type: "inputText",
+        label: "Segundo input",
+        fieldName: "SecondField"
+      },
+      {
+        id: "SampleInclude",
+        type: "include",
+        includedUrl: "sample_include/included.html"
+      }];
+
+        for (var cur = 0; cur < curConf.length; cur++) {
+          var container = document.createElement('div');
+          container.id = 'container_' + curConf[cur].id;
+          canvas.appendChild(container);
+          loadComponent(curConf[cur].type, components, container, 'formField_' + curConf[cur].id, curConf[cur]);
+        }
+}
+
+loadForm(document.getElementById("area_pintado"));
+    </script>
+
+  </body>
+</html>

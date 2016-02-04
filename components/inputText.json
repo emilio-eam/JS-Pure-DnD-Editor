@@ -1,0 +1,17 @@
+{"component":
+  {
+    "fields": {
+      "label": "etiqueta",
+      "fieldName": "textInput",
+      "defValue": "",
+      "enabled": ""
+    },
+    "enabled": ["", "disabled", "readonly"],
+
+    "functions": ["onFocus", "onBlur"],
+    "onFocus": ["", "document.getElementById(this.id).classList.add('focused');"],
+    "onBlur": ["", "document.getElementById(this.id).classList.remove('focused');"],
+
+    "draw": "this.id = id;  container.innerHTML = params.label + '<input id=\"' + id + '\" type=\"text\" name=\"' + params.fieldName + '\" value=\"' + params.defValue + '\" ' + params.enabled + '/>';  document.getElementById(id).onfocus = this.onFocus;  document.getElementById(id).onblur = this.onBlur;"
+  }
+}

@@ -1,0 +1,17 @@
+{"component":
+  {
+    "fields": {
+      "label": "combo",
+      "fieldName": "textInput",
+      "defValue": "",
+      "enabled": ""
+    },
+    "enabled": ["", "disabled", "readonly"],
+
+    "functions": ["onFocus", "onBlur"],
+    "onFocus": ["", "document.getElementById(this.id).classList.add('focused');"],
+    "onBlur": ["", "document.getElementById(this.id).classList.remove('focused');"],
+
+    "draw": "this.id = id;  container.innerHTML = params.label + '<select id=\"' + id + '\" name=\"' + params.fieldName + '\" ' + params.enabled + '><option value=\"\">cargando</option></select>';"
+  }
+}

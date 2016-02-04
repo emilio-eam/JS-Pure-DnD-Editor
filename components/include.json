@@ -1,0 +1,11 @@
+{"component":
+  {
+    "fields": {
+      "includedUrl": ""
+    },
+
+    "functions": [],
+
+    "draw": "if (params.includedUrl != '') { container.innerHTML = getUrl(params.includedUrl); } else { container.innerHTML = '#include &lt;html&gt;'; }"
+  }
+}

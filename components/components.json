@@ -1,0 +1,9 @@
+{"components":
+  {
+    "inputText": "inputText.json",
+    "combo": "combo.json",
+    "multiselect": "multiselect.json",
+    "include": "include.json",
+    "ej_complejo": "../extra_comp/ejemplo.json"
+  }
+}

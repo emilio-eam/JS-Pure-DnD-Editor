@@ -1,0 +1,4 @@
+
+input[type="text"].focused {
+  background-color: #ffff00;
+}

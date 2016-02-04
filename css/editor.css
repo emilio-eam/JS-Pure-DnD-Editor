@@ -1,0 +1,91 @@
+
+#outer-dropzone {
+  height: 140px;
+}
+
+#inner-dropzone {
+  height: 80px;
+}
+
+.configure-panel {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background-color: #ffa;
+  padding: 5px;
+  width: 20%;
+  border: solid 2px;
+  border-radius: 4px
+}
+
+.paletteComponent {
+  display: inline-block;
+  padding: 2em 0.5em;
+  color: #fff;
+  background-color: #29e;
+  border: solid 2px #fff;
+
+  text-align: center
+}
+
+.paletteThumbnail {
+  width: 100px;
+  height: 20px;
+}
+
+.dropzone {
+  background-color: #ccc;
+  display: none;
+  transition: background-color 0.3s;
+}
+
+.container {
+  width: 80%;
+}
+
+#Editor_surface {
+  width: 80%;
+  margin: 10px auto 30px;
+  padding: 10px;
+}
+
+.drop-active {
+  min-height: 40px;
+  border: dashed 4px transparent;
+  border-radius: 4px;
+  border-color: #aaa;
+  display: block
+}
+
+.dragging .dropzone {
+  min-height: 40px;
+  border: dashed 4px transparent;
+  border-radius: 4px;
+  border-color: #aaa;
+  display: block
+}
+
+.drop-target {
+  background-color: #29e;
+  border-color: #fff;
+  border-style: solid;
+  transition: background-color 0.3s
+}
+
+.drag-drop {
+  -webkit-transform: translate(0px, 0px);
+          transform: translate(0px, 0px);
+
+  transition: background-color 0.3s;
+}
+
+.dragging-for-drop {
+  background-color: #4cf;
+  transition: background-color 0.3s
+}
+
+.can-drop {
+  background-color: #6f6;
+  transition: background-color 0.3s
+}
+

@@ -1,0 +1,18 @@
+{"component":
+  {
+    "fields": {
+      "label": "etiqueta",
+      "fieldName": "textInput",
+      "size": "5",
+      "defValue": "",
+      "enabled": ""
+    },
+    "enabled": ["", "disabled", "readonly"],
+
+    "functions": ["onFocus", "onBlur"],
+    "onFocus": ["", "document.getElementById(this.id).classList.add('focused');"],
+    "onBlur": ["", "document.getElementById(this.id).classList.remove('focused');"],
+
+    "draw": "this.id = id;  container.innerHTML = params.label + '<select id=\"' + id + '\" multiple size=\"' + params.size + '\"> <option value=\"\">Loading</option></select>';"
+  }
+}

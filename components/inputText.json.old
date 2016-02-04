@@ -1,0 +1,14 @@
+{"component":
+  {
+    "fields": {
+      "label": "etiqueta",
+      "defValue": "",
+      "enabled": ""
+    },
+    "enabled": ["", "disabled", "readonly"],
+    "functions": ["onFocus", "onBlur"],
+    "draw": "(function(id, container, location, params) {  this.id = id;  container.innerHTML = params.label + '<input id=\"' + id + '\" type=\"text\" value=\"' + params.defValue + '\" ' + params.enabled + '/>';  document.getElementById(id).onfocus = this.onFocus;  document.getElementById(id).onblur = this.onBlur;})",
+    "onFocus": "(function(event) {  document.getElementById(this.id).classList.add('focused');})",
+    "onBlur": "(function(event) {  document.getElementById(this.id).classList.remove('focused');})"
+  }
+}

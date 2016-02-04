@@ -1,0 +1,321 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <script type="text/javascript" src="js/html2canvas/html2canvas.js" ></script>
+    <script type="text/javascript" src="js/hermite/hermite.js" ></script>
+    <script type="text/javascript" src="js/custom.js" ></script>
+    <script type="text/javascript" src="js/editor.js" ></script>
+    <link href="css/editor.css" rel="stylesheet" type="text/css" media="screen" />
+    <link href="css/main.css" rel="stylesheet" type="text/css" media="screen" />
+  </head>
+  <body>
+
+    <h1>Editor de componentes</h1>
+
+    <div id="obj_captura_hidden" style="display:none">
+      <h1 style="background-color: black, fontcolor: white">Esto es un elemento oculto</h1>
+    </div>
+
+    <div id="Editor" style="background-color: silver">
+      <div id="helper_editor_drawing" style="display:none"></div>
+      <table>
+        <tr id="editor_palette">
+        </tr>
+      </table>
+      <div id="Editor_surface"></div>
+    </div>
+
+    <div id="configure-panel" class="configure-panel drag-drop">
+      <div id="configure-component-name">No component selected</div>
+      <div id="configure-component-fields"></div>
+    </div>
+
+    <script type="text/javascript">
+
+// in the editor, this is a global variable
+var components = loadJson("components/components.json").components;
+var index = 1;
+
+var editor = {
+  propertyDragType: "text/plain",
+  componentDragType: "text/plain",
+  curDrag: null,
+  log: function (logged) {
+    console.log(logged);
+  }, 
+  createEditPropertyField: function (property, value, allowedValues, forcedType) {
+    var type = typeof forcedType !== "undefined" ? forcedType : (((typeof allowedValues !== "undefined") && (allowedValues instanceof Array)) ? "combo":"text");
+    var field = null;
+    editor.log('creating property field "' + property + '" of type ' + type);
+    switch (type) {
+      case "hidden":
+        field = document.createElement('input');
+        field.id = property == 'id' ? 'propEditorBlockId' : ("propEditor_" + property);
+        field.type = "hidden";
+        field.name = property;
+        field.value = value;
+        break;
+      case "text":
+        field = document.createElement('input');
+        field.id = "propEditor_" + property;
+        field.type = "text";
+        field.name = property;
+        field.value = value;
+        field.onchange = this.onChangeEditedProperty;
+        break;
+      case "combo":
+        /*IE8 gives an error when adding options (?) so create via innerHTML */
+        var html = "<select id=\"propEditor_" + property + "\" name=\"" + property + "\">";
+        for (var i = 0; i < allowedValues.length; i++) {
+          html += "<option value=\"" + allowedValues[i] + (allowedValues[i] == value ? "\" selected":"\"") + ">" + allowedValues[i] + "</option>";
+        }
+        html += "</select>";
+        //field.innerHTML = html;
+        document.getElementById("helper_editor_drawing").innerHTML = html;
+        field = document.getElementById("propEditor_" + property);
+        field.onchange = this.onChangeEditedProperty;
+        break;
+    }
+    return field;
+  },
+  onComponentSelect: function (event, ietarget) {
+    var target = typeof ietarget !== 'undefined' ?  ietarget : event.target;
+    // comprobacion de clase compatible con IE8
+    if ((' ' + target.className + ' ').indexOf(' dropzone ') == -1) {
+      var compFields = document.getElementById('configure-component-fields');
+      var compName = document.getElementById('configure-component-name');
+      compFields.innerHTML = "";
+      compFields.appendChild(editor.createEditPropertyField("id", target.id, null, "hidden"));
+      var fields = target.getElementsByTagName('input');
+      // this does not work in IE8, search manually
+      //compName.innerHTML = document.querySelector('#' + target.id + ' > input[name="type"]').value;
+      var i = fields.length;
+      var component;
+      while (i-- > 0) {
+        if (fields[i].parentNode == target) {
+          if (fields[i].name == "type") {
+            component = loadComponentJson(fields[i].value, components);
+          }
+        }
+      }
+      for (i = 0; i < fields.length; i++) {
+        if (fields[i].parentNode == target) {
+          if (fields[i].name == "type") {
+            compName.innerHTML = fields[i].value;
+            compName.appendChild(editor.createEditPropertyField("type", fields[i].value, null, "hidden"));
+          } else {
+            var newDiv = document.createElement('div');
+            newDiv.innerHTML = fields[i].name;
+            newDiv.appendChild(editor.createEditPropertyField(fields[i].name, fields[i].value, component[fields[i].name]));
+            compFields.appendChild(newDiv);
+          }
+        }
+      }
+    }
+  },
+  onChangeEditedProperty: function () {
+    var target = document.getElementById(document.getElementById("propEditorBlockId").value);
+    var fields = target.getElementsByTagName('input');
+    var compDef = {};
+    for (var i = 0; i < fields.length; i++) {
+      if (fields[i].parentNode == target) {
+        fields[i].value = document.getElementById('propEditor_' + fields[i].name).value;
+        compDef[fields[i].name] = fields[i].value;
+      }
+    }
+    compDef.id = compDef.type;
+    target.getElementsByTagName('div')[0].innerHTML = "";
+    loadComponent(compDef.type, components, target.getElementsByTagName('div')[0], 'container_' + (index++), compDef);
+  },
+  onPropertiesMoveStart: function (event) {
+    editor.log('drag starting');
+    event.dataTransfer.setData("text", event.screenX + ";" + event.screenY);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.dropEffect = 'move';
+  },
+  onPropertiesMove: function (event) {
+    editor.log('dragging');
+    var target = event.target,
+        str = event.dataTransfer.getData(editor.componentDragType),
+        splitPos = str.indexOf(";"),
+    // keep the dragged position in the data-x/data-y attributes
+        x = (parseInt(target.getAttribute('data-x')) || 0) + event.pageX - parseInt(str.substring(0, splitPos)),
+        y = (parseInt(target.getAttribute('data-y')) || 0) + event.pageY - parseInt(str.substring(splitPos + 1, 1000));
+
+    // translate the element
+    target.style.webkitTransform =
+    target.style.transform =
+        'translate(' + x + 'px, ' + y + 'px)';
+  },
+  onPropertiesEndMove: function (event) {
+    editor.log('drag ending');
+    var target = event.target,
+        evtData = event.dataTransfer.getData(editor.componentDragType),
+        splitPos = evtData.indexOf(";"),
+    // keep the dragged position in the data-x/data-y attributes
+        x = (parseInt(target.getAttribute('data-x')) || 0) + event.screenX - parseInt(evtData.substring(0, splitPos)),
+        y = (parseInt(target.getAttribute('data-y')) || 0) + event.screenY - parseInt(evtData.substring(splitPos + 1, 1000));
+
+    // translate the element
+    target.style.webkitTransform =
+    target.style.transform =
+        'translate(' + x + 'px, ' + y + 'px)';
+
+    // update the position attributes
+    target.setAttribute('data-x', x);
+    target.setAttribute('data-y', y);
+  },
+  prepareDraggableEditor: function () {
+    var configPanel = document.getElementById('configure-panel');
+    configPanel.draggable = true;
+    configPanel.addEventListener('dragstart', this.onPropertiesMoveStart);
+    //configPanel.addEventListener('drag', this.onPropertiesMove);
+    configPanel.addEventListener('dragend', this.onPropertiesEndMove);
+  },
+  createThumbnail: function (curComp) {
+      // parse component into helper_editor_drawing to add its thumbnail
+      var tempDrawingDiv = document.getElementById("helper_editor_drawing");
+      var thumbDiv = document.createElement('div');
+      document.getElementById('editor_' + curComp).appendChild(thumbDiv);
+      var compDef = {id: curComp, type: curComp};
+      loadComponent(curComp, components, tempDrawingDiv, 'sampler_' + curComp, compDef);
+      tempDrawingDiv.style = 'display:inline-block';
+      html2canvas(tempDrawingDiv, {
+        onrendered: function(canvas) {
+          this.div.appendChild(resizeCanvas(canvas, 20, 100));
+        },
+        async: false,
+        javascriptEnabled: true,
+        div: thumbDiv
+      });
+      // reset helper_editor_drawing contents
+      tempDrawingDiv.innerHTML = '';
+      tempDrawingDiv.style = 'display:none';
+  },
+  prepareEditor: function (components) {
+    // make configure panel mobile
+    this.prepareDraggableEditor();
+    // draw component palette
+    for (var curComp in components) {
+      var newTd = document.createElement('td');
+      // create component with innerHTML for compatibility with IE8 and FireFox
+      newTd.innerHTML = '<div id="editor_' + curComp + '" class="drag-drop draggable paletteComponent" draggable="true" onselectstart="editor.onSelectStartFunction(event, this)" ondragstart="editor.onDragStartFunction(event, this)" ondragend="editor.onDragEndFunction(event, this)">' + curComp + '</div>';
+      document.getElementById('editor_palette').appendChild(newTd);
+      this.createThumbnail(curComp);
+    };
+  },
+  onDragStartFunction: function (event, ietarget) {
+    editor.log('starting component drag');
+    var target = typeof ietarget !== 'undefined' ?  ietarget : event.target;
+    target.classList.add('dragging-for-drop');
+    event.dataTransfer.setData(editor.propertyDragType, target.id.substring(7, 10000));
+    event.dataTransfer.effectAllowed = 'copy';
+    document.getElementById('Editor').classList.add('dragging');
+    var img = target.querySelector('canvas');
+    if (!!img) {
+      event.dataTransfer.setDragImage(img, 5, 5);
+    }
+    editor.curDrag = target;
+  },
+  onDragEndFunction: function (event, ietarget) {
+    editor.log('ending component drag');
+    var target = typeof ietarget !== 'undefined' ?  ietarget : event.target;
+    target.classList.remove('dragging-for-drop');
+    target.classList.remove('can-drop');
+    document.getElementById('Editor').classList.remove('dragging');
+    // Change current target, if it exists
+    var tmp = document.querySelectorAll('drop-target');
+    for (var i = 0; i < tmp.length; i++) {
+      tmp.classList.remove('drop-target');
+    }
+    editor.curDrag = null;
+  },
+  createDraggableTarget: function () {
+    var newId = 'dropzone' + (index++);
+    document.getElementById('helper_editor_drawing').innerHTML = '<div id="' + newId + '" class="dropzone container" ondrop="editor.onDropFunction(event, this)" ondragenter="editor.onDragOverFunction(event, this)" ondragover="editor.onDragOverFunction(event, this)" ondragleave="editor.onDragLeaveFunction(event, this)" tabIndex="-1" onfocus="editor.onComponentSelect(event, this)"><div></div></div>';
+    return document.getElementById(newId);
+  },
+  onDropFunction: function (event, ietarget) {
+    editor.log('dropping component');
+    var target = typeof ietarget !== 'undefined' ?  ietarget : event.target;
+    event.preventDefault();
+    var curComp = event.dataTransfer.getData(editor.propertyDragType);
+    target.classList.remove('drop-target');
+    var compDef = {id: curComp, type: curComp};
+    var typeField = document.createElement('input');
+    typeField.type = 'hidden';
+    typeField.name = 'type';
+    typeField.value = curComp;
+    typeField.classList.add('editorConfigurationField');
+    target.appendChild(typeField);
+    var compDetails = loadJson(parseComponentUrl(components, curComp)).component;
+    for (fieldName in compDetails.fields) {
+      var curField = document.createElement('input');
+      curField.type = 'hidden';
+      curField.name = fieldName;
+      curField.value = compDetails.fields[fieldName];
+      curField.classList.add('editorConfigurationField');
+      target.appendChild(curField);
+    }
+    loadComponent(curComp, components, target.getElementsByTagName('div')[0], 'container_' + (index++), compDef);
+    target.classList.remove('dropzone');
+    target.parentNode.insertBefore(editor.createDraggableTarget(), target);
+    if(target.nextSibling) {
+      target.parentNode.insertBefore(editor.createDraggableTarget(), target.nextSibling);
+    } else {
+      target.parentNode.appendChild(editor.createDraggableTarget());
+    }
+  },
+  onDragOverFunction: function (event, ietarget) {
+    editor.log('dragging over');
+    var target = typeof ietarget !== 'undefined' ?  ietarget : event.target;
+    // class check for IE8
+    if ((' ' + target.className + ' ').indexOf(' dropzone ') > -1) {
+      event.preventDefault();
+      target.classList.add('drop-target');
+      editor.curDrag.classList.add('can-drop');
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  },
+  onDragLeaveFunction: function (event, ietarget) {
+    var target = typeof ietarget !== 'undefined' ?  ietarget : event.target;
+    target.classList.remove('drop-target');
+    editor.curDrag.classList.remove('can-drop');
+    event.dataTransfer.dropEffect = 'none';
+  },
+  prepareDraggableTarget: function () {
+    document.getElementById('Editor_surface').appendChild(this.createDraggableTarget());
+  }
+}
+
+    </script>
+
+    <!--[if lt IE 9]>
+    <script type="text/javascript">
+
+editor.propertyDragType = "text";
+editor.componentDragType = "text";
+
+// Disable IE incompatible features
+editor.createThumbnail = editor.log = function (curComp) {};
+
+editor.onSelectStartFunction = function (event, target) {
+    event.preventDefault();
+    event.stopPropagation();
+    target.dragDrop();
+};
+
+    </script>
+    <![endif]-->
+
+    <div id="targetDiv" style="height: 400px, width: 400px"></div>
+
+    <script type="text/javascript">
+
+    editor.prepareEditor(components);
+    editor.prepareDraggableTarget();
+
+    </script>
+  </body>
+</html>
