@@ -3,9 +3,9 @@ JavaScript Pure Drag &amp; Drop Editor
 
 A simple Drag and Drop editor made with JavaScript
 
-Compatible with Internet Explorer 8
+Compatible with Internet Explorer 8 with aight.js (https://github.com/shawnbot/aight, add it to js/aight folder).
 
-Using html2canvas and hermite to snapshot the available components and draw them in the palette.
+Using html2canvas (https://github.com/niklasvh/html2canvas) and hermite (https://github.com/viliusle/Hermite-resize) to snapshot the available components and draw them in the palette. They must be at js/html2canvas/html2canvas.js and js/hermite/hermite.js, respectively.
 The editor itself uses no libraries.
 
 All the components are listed in conponents/components.json, as a name/url value.
